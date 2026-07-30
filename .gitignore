@@ -1,0 +1,18 @@
+# Arduino / arduino-cli build output
+build/
+*.hex
+*.elf
+*.eep
+*.bin
+*.map
+
+# Flash and EEPROM dumps produced while verifying the board
+dumps/
+
+# Editor / OS noise
+.vscode/
+.idea/
+Thumbs.db
+desktop.ini
+*~
+*.swp

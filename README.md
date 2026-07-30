@@ -1,31 +1,29 @@
 # cute_arm
 
-Build, calibration and verification record for a 3-DOF Arduino robotic arm.
+3자유도(3-DOF) 아두이노 로봇 암 제작, 캘리브레이션 및 검증 기록.
 
-The firmware is the **Seven** project by elevenMiles ([upstream](https://github.com/elevenMiles/Robotic_Arm_Seven), MIT).
-This repository is the log of *my* build: what actually runs on my board, how I
-calibrated it, what I measured, and the tooling I wrote to do it. See
-[NOTICE.md](NOTICE.md) for what is mine and what is not.
+펌웨어는 elevenMiles의 **Seven** 프로젝트([Upstream](https://github.com/elevenMiles/Robotic_Arm_Seven), MIT)를 기반으로 합니다.
+이 리포지토리는 *개인 빌드* 기록으로, 실제 보드에서 동작하는 코드, 캘리브레이션 과정, 측정 데이터 및 직접 작성한 도구들을 포함합니다. 작성자 작업물과 외부 라이선스 구분은 [NOTICE.md](NOTICE.md)를 참고하세요.
 
-## Hardware
+## 하드웨어
 
-| | |
+| 항목 | 내용 |
 |---|---|
-| Controller | Arduino Uno (genuine, `VID_2341` / `PID_0043`) |
-| Serial | **115200** baud, `COM7` on this machine |
-| MCU | ATmega328P, 32 KB flash (Optiboot bootloader), 2 KB RAM, 1 KB EEPROM |
-| Servos | 4× SG90 — base `D6`, shoulder `D9`, elbow `D10`, gripper `D11` |
-| Link lengths | shoulder→elbow **12.0 cm**, elbow→gripper **12.0 cm** |
-| Reach | 3 cm (min) to 23 cm (max) from the shoulder pivot |
+| 컨트롤러 | Arduino Uno (정품, `VID_2341` / `PID_0043`) |
+| 시리얼 | **115200** baud, 현재 PC 연결: `COM7` |
+| MCU | ATmega328P, 32 KB flash (Optiboot 부트로더), 2 KB RAM, 1 KB EEPROM |
+| 서보 모터 | 4× SG90 — 베이스 `D6`, 어깨 `D9`, 팔꿈치 `D10`, 그리퍼 `D11` |
+| 링크 길이 | 어깨→팔꿈치 **12.0 cm**, 팔꿈치→그리퍼 **12.0 cm** |
+| 도달 범위 | 어깨 피벗 기준 3 cm (최소) ~ 23 cm (최대) |
 
-Flash footprint: **16,610 / 32,256 bytes (51%)**, RAM 820 / 2048 bytes (40%).
-Measured control loop rate: **~2,410 Hz**.
+플래시 메모리 사용량: **16,610 / 32,256 bytes (51%)**, RAM **820 / 2048 bytes (40%)**.  
+측정된 제어 루프 속도: **~2,410 Hz**.
 
-## Current calibration
+## 현재 캘리브레이션 설정
 
-Stored in EEPROM at address 0 as five little-endian floats. Survives power cycles.
+EEPROM 주소 0번지에 5개의 리틀 엔디안 float 형태로 저장되며, 전원이 꺼져도 유지됩니다.
 
-| Value | Setting |
+| 항목 | 설정값 |
 |---|---|
 | `calib_base` | **5.0°** |
 | `calib_shoulder` | 0.0° |
@@ -33,86 +31,73 @@ Stored in EEPROM at address 0 as five little-endian floats. Survives power cycle
 | `gripper_open` | **45.0°** |
 | `gripper_close` | 0.0° |
 
-Calibrated 2026-07-30 — full procedure and verification in
-[docs/calibration-log.md](docs/calibration-log.md).
+2026-07-30 캘리브레이션 완료 — 상세 절차 및 검증 기록은 [docs/calibration-log.md](docs/calibration-log.md) 참고.
 
-## Coordinate system
+## 좌표계
 
-Origin `(0,0,0)` is the **shoulder servo's pivot**. Units are centimetres.
+원점 `(0,0,0)`은 **어깨 서보의 피벗** 위치입니다. 단위는 센티미터(cm)입니다.
 
-| Axis | Direction |
+| 축 | 방향 |
 |---|---|
-| X | forward |
-| Y | left / right |
-| Z | up / down |
+| X | 앞 / 뒤 |
+| Y | 좌 / 우 |
+| Z | 위 / 아래 |
 
-The calibrated rest pose is `(12, 0, 12)` — upper arm vertical, forearm
-horizontal, so the arm looks like the digit "7".
+캘리브레이션된 기본 대기 자세(Rest pose)는 `(12, 0, 12)`입니다. (위쪽 팔은 수직, 전완은 수평으로 숫자 "7" 모양을 이웁니다.)
 
-## Quick start
+## 빠른 시작
 
-Open a serial monitor at 115200 baud and type commands. On boot the arm prints:
+115200 baud 속도로 시리얼 모니터를 열고 명령어를 입력합니다. 부팅 시 출력 메시지:
 
 ```
 Robotic arm initialized.
 If this is the first run, please use -R command to reset all calibration angles.
 ```
 
-Common commands:
+주요 명령어:
 
 ```
-A(15 0 5)    move gripper to x=15cm, y=0, z=+5cm (inverse kinematics)
-M(90 90 90)  set joint angles directly (base, shoulder, elbow)
-U(3) D(3)    move 3 cm up / down   (also L R F B; bare letter = 5 cm)
-O            return to rest
-GO / GC      gripper open / close
-G(30)        gripper to a specific angle
-S(60)        angular speed, clamped to 30..90 deg/sec
-T            print current end-effector position
+A(15 0 5)    그리퍼를 x=15cm, y=0, z=+5cm 위치로 이동 (역운동학 IK)
+M(90 90 90)  각 관절 각도를 직접 설정 (베이스, 어깨, 팔꿈치)
+U(3) D(3)    상/하 3 cm 이동 (L R F B 사용 가능; 단독 문자는 5 cm 이동)
+O            기본 대기 자세로 복귀
+GO / GC      그리퍼 열기 / 닫기
+G(30)        그리퍼 특정 각도 설정
+S(60)        관절 이동 속도 설정 (30..90 deg/sec 범위 제한)
+T            현재 엔드 이펙터 위치 출력
 ```
 
-Full command list is in the header comment of
-[`firmware/main/main.ino`](firmware/main/main.ino). Note `T` is missing from that
-list — see [docs/findings.md](docs/findings.md).
+전체 명령어 목록은 [`firmware/main/main.ino`](firmware/main/main.ino) 주석에 작성되어 있습니다. (`T` 명령어 누락 관련 사항은 [docs/findings.md](docs/findings.md) 참고)
 
-## Repository layout
+## 리포지토리 구조
 
 ```
-firmware/          Seven firmware, unmodified, byte-identical to upstream (MIT, elevenMiles)
-  main/            what actually runs on the board
-  test/            per-servo assembly test sketch
-tools/             my tooling
-  calibrate.ps1    arrow-key calibration jogger
-  read-eeprom/     temporary sketch that dumps the EEPROM calibration struct
+firmware/          Seven 펌웨어 (업스트림 코드로 변경 없음, MIT 라이선스, elevenMiles)
+  main/            실제 보드에 업로드되어 실행되는 메인 코드
+  test/            서보별 조립 테스트용 스케치
+tools/             작성한 캘리브레이션 및 관리 도구
+  calibrate.ps1    방향키 기반 캘리브레이션 조거 스크립트
+  read-eeprom/     EEPROM 캘리브레이션 구조체를 덤프하는 임시 스케치
 docs/
-  firmware-analysis.md   how the firmware works internally
-  calibration-log.md     the calibration session, values, and verification
-  findings.md            bugs and doc mismatches found in the firmware
+  firmware-analysis.md   펌웨어 내부 동작 방식 분석 문서
+  calibration-log.md     캘리브레이션 진행 세션, 값 및 검증 데이터
+  findings.md            펌웨어 버그 및 문서 불일치 분석
 ```
 
-## Working with the board
+## 보드 작업 시 주의사항
 
-Two things bite immediately:
+1. **시리얼 포트를 열면 Uno가 리셋됩니다.** 리셋 시 로봇 암은 `90 + calib` 위치로 튀며, 그리퍼는 `gripper_open` 위치로 이동합니다. 기존에 조정해 둔 자세 정보는 초기화됩니다.
+2. **Optiboot는 EEPROM 직접 읽기/쓰기를 지원하지 않습니다.** `avrdude -U eeprom:r` 명령은 성공하는 것처럼 보이지만 실제로는 *Flash* 바이너리를 출력합니다. 실제 EEPROM을 읽으려면 전용 임시 스케치가 필요합니다. ([tools/README.md](tools/README.md) 참고)
+3. **서보 모터에 위치 피드백(Position Feedback)이 없습니다.** `T` 명령어가 출력하는 좌표는 입력받은 각도로부터 계산된 *이론상* 위치입니다. 서보가 탈조되거나 장애물에 걸려도 보드는 정위치에 있다고 인식합니다.
 
-1. **Opening the serial port resets the Uno.** The arm snaps to `90 + calib` and
-   the gripper is driven to `gripper_open`. Any pose you had dialled in is lost.
-2. **Optiboot cannot read or write EEPROM.** `avrdude -U eeprom:r` appears to
-   succeed but silently returns *flash* bytes instead. Reading the real EEPROM
-   needs a temporary sketch — see [tools/README.md](tools/README.md).
+## 로드맵 (Roadmap)
 
-Also: the servos have **no position feedback**. The `T` command reports where the
-firmware *believes* the arm is, computed from commanded angles. A stalled or
-obstructed servo still reports the ideal position.
+- [ ] 웨이포인트 재경로 반복 실행(Looping) 버그 수정 ([docs/findings.md](docs/findings.md) 참고)
+- [ ] 펌웨어 헤더 주석에 `T` 명령어 명세 추가
+- [ ] `gripper_close = 0°` 설정 시 기계적 스토퍼에 서보가 걸려 과열되는지 확인
+- [ ] 향후 계획: 해당 하드웨어에 맞춘 자체 펌웨어를 처음부터 새로 작성하고 기존 `firmware/` 대체
 
-## Roadmap
+## 라이선스
 
-- [ ] Fix waypoint replay so it actually loops (see [docs/findings.md](docs/findings.md))
-- [ ] Document the `T` command in the firmware header
-- [ ] Check whether `gripper_close = 0°` stalls the servo against a mechanical stop
-- [ ] Eventually: write my own firmware from scratch for this hardware, and drop `firmware/`
-
-## License
-
-My work (`docs/`, `tools/`, this README): MIT, see [LICENSE](LICENSE).
-The firmware under `firmware/`: MIT, © 2026 elevenMiles, see
-[`firmware/LICENSE`](firmware/LICENSE) and [NOTICE.md](NOTICE.md).
+- 본 리포지토리의 작업물 (`docs/`, `tools/`, 본 README): MIT License ([LICENSE](LICENSE) 참고)
+- `firmware/` 하위 펌웨어: MIT License, © 2026 elevenMiles ([`firmware/LICENSE`](firmware/LICENSE) 및 [NOTICE.md](NOTICE.md) 참고)

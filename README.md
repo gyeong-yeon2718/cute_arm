@@ -4,7 +4,7 @@
 
 **Arduino · 서보 구동 · 캘리브레이션 · 실제 보드 검증**
 
-[제작·검증 기록](docs/calibration-log.md) · [문제 분석](docs/findings.md) · [개인 포트폴리오](https://github.com/gyeong-yeon2718)
+[제작·검증 기록](docs/calibration-log.md) · [문제 분석](docs/findings.md)
 
 </div>
 

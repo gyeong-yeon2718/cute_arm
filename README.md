@@ -1,4 +1,29 @@
-# cute_arm
+<div align="center">
+
+# 개인 3DOF 로봇팔
+
+**Arduino · 서보 구동 · 캘리브레이션 · 실제 보드 검증**
+
+[제작·검증 기록](docs/calibration-log.md) · [문제 분석](docs/findings.md) · [개인 포트폴리오](https://github.com/gyeong-yeon2718)
+
+</div>
+
+---
+
+## 프로젝트 한눈에 보기
+
+| 구분 | 내용 |
+| --- | --- |
+| 프로젝트 | 개인 로봇팔 제작·캘리브레이션 |
+| 개인 작업 | 기구·회로 구성, 하드웨어 적용, 캘리브레이션과 검증 기록·도구 |
+| 구동 구성 | 3자유도 로봇팔, 그리퍼를 포함한 SG90 서보모터 4개 |
+| 확인할 자료 | [보정 과정](docs/calibration-log.md), [펌웨어 분석](docs/firmware-analysis.md), [발견 사항](docs/findings.md) |
+| 외부 코드 | elevenMiles의 Seven 펌웨어 활용 · MIT · [원저자 고지](NOTICE.md) |
+
+보드의 입력 명령과 실제 하드웨어 상태를 구분하며 제작 과정을 기록한 프로젝트입니다.
+시리얼 연결 시 리셋, EEPROM 확인, 이론 좌표와 위치 피드백의 차이를 검증 문서에서 다룹니다.
+
+---
 
 3자유도(3-DOF) 아두이노 로봇 암 제작, 캘리브레이션 및 검증 기록.
 
